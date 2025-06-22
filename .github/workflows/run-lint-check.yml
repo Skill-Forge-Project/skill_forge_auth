@@ -1,0 +1,4 @@
+jobs:
+  call-lint-check:
+    uses: Skill-Forge-Project/ci-templates/.github/workflows/lint-check.yml@master
+
