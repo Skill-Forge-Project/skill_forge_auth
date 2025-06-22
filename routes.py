@@ -45,7 +45,7 @@ def signup():
         return jsonify({"message": "User created successfully"}), 201
     except Exception as e:
         db.session.rollback()
-        app.logger.error(f"An error occurred during signup: {str(e)}")
+        app.logger.exception("An error occurred during signup")
         return jsonify({"message": "An internal error has occurred"}), 500
 
 @auth_bp.route("/login", methods=["POST"])
