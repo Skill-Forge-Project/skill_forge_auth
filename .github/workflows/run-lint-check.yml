@@ -1,3 +1,5 @@
+name: Check for print/console.log statements
+
 on:
   pull_request:
     branches: [ master ]
