@@ -3,6 +3,7 @@ from extensions import db
 from models import User
 from services import generate_token, internal_only
 from flask_jwt_extended import jwt_required, get_jwt_identity
+import app
 
 
 auth_bp = Blueprint("auth", __name__)
