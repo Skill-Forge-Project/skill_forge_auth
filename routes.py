@@ -23,8 +23,8 @@ def signup():
     data = request.get_json()
     email = data.get("email")
     username = data.get("username")
-    first_name = data.get("first_name")
-    last_name = data.get("last_name")
+    first_name = data.get("firstName")
+    last_name = data.get("lastName")
     password = data.get("password")
 
     if not email or not password:
@@ -43,7 +43,7 @@ def signup():
         user.set_password(password)
         db.session.add(user)
         db.session.commit()
-        return jsonify({"message": "User created successfully"}), 201
+        return jsonify({"message": "User created successfully", "success": "true"}), 201
     except Exception as e:
         db.session.rollback()
         app.logger.exception("An error occurred during signup")
