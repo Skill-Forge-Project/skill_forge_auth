@@ -78,7 +78,7 @@ def login():
 @jwt_required(refresh=True)
 def refresh_access_token():
     identity = get_jwt_identity()
-    new_access_token = create_access_token(identity=identity, expires_delta=timedelta(hours=1))
+    new_access_token = generate_token(identity=identity)
 
     return jsonify({'access_token': new_access_token})
 
