@@ -1,13 +1,16 @@
 from functools import wraps
 import os
 from flask import request, jsonify
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, create_refresh_token
 from datetime import timedelta
 
 INTERNAL_SECRET = os.getenv("INTERNAL_SECRET")
 
 def generate_token(identity):
     return create_access_token(identity=identity, expires_delta=timedelta(hours=1))
+
+def generate_refresh_token(identity):
+    return create_refresh_token(identity=identity, expires_delta=timedelta(days=7))
 
 def internal_only(f):
     """

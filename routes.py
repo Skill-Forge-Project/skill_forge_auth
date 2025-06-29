@@ -1,12 +1,15 @@
+import app
 from flask import Blueprint, request, jsonify
 from extensions import db
 from models import User
-from services import generate_token, internal_only
-from flask_jwt_extended import jwt_required, get_jwt_identity
-import app
+from services import generate_token, generate_refresh_token, internal_only
+from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
+from datetime import timedelta
+
 
 
 auth_bp = Blueprint("auth", __name__)
+
 
 @auth_bp.route("/internal/users/usernames", methods=["GET"])
 @internal_only
@@ -17,6 +20,7 @@ def get_usernames():
 
     users = User.query.filter(User.id.in_(user_ids)).all()
     return jsonify({user.id: user.username for user in users}), 200
+
 
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
@@ -49,6 +53,7 @@ def signup():
         app.logger.exception("An error occurred during signup")
         return jsonify({"message": "An internal error has occurred"}), 500
 
+
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -58,13 +63,25 @@ def login():
     user = User.query.filter_by(email=email).first()
 
     if user and user.check_password(password):
-        token = generate_token(identity=user.id)
+        access_token = generate_token(identity=user.id)
+        refresh_token = generate_refresh_token(identity=user.id)
         return jsonify({
-            "access_token": token,
+            "access_token": access_token,
+            "refresh_token": refresh_token,
             "user_id": user.id
         }), 200
     else:
         return jsonify({"message": "Invalid credentials"}), 401
+
+
+@auth_bp.route("/refresh_access_token", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh_access_token():
+    identity = get_jwt_identity()
+    new_access_token = generate_token(identity=identity)
+
+    return jsonify({'access_token': new_access_token})
+
 
 @auth_bp.route("/protected", methods=["GET"])
 @jwt_required()
