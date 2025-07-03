@@ -4,7 +4,6 @@ from extensions import db
 from models import User
 from services import generate_token, generate_refresh_token, internal_only
 from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
-from datetime import timedelta
 
 
 
@@ -65,6 +64,12 @@ def login():
     if user and user.check_password(password):
         access_token = generate_token(identity=user.id)
         refresh_token = generate_refresh_token(identity=user.id)
+        
+        user.user_online_status = "Online"
+        user.last_seen_date = db.func.current_timestamp()
+        db.session.commit()
+        
+        
         return jsonify({
             "access_token": access_token,
             "refresh_token": refresh_token,
