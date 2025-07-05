@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models import User
 from services import generate_token, generate_refresh_token, internal_only
-from flask_jwt_extended import jwt_required, get_jwt_identity, create_access_token
+from flask_jwt_extended import jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
 from datetime import timedelta
 
 
@@ -62,16 +62,19 @@ def login():
 
     user = User.query.filter_by(email=email).first()
 
-    if user and user.check_password(password):
-        access_token = generate_token(identity=user.id)
-        refresh_token = generate_refresh_token(identity=user.id)
-        return jsonify({
-            "access_token": access_token,
-            "refresh_token": refresh_token,
-            "user_id": user.id
-        }), 200
-    else:
+    if not user or not user.check_password(password):
         return jsonify({"message": "Invalid credentials"}), 401
+    
+    access_token = generate_token(identity=user.id)
+    refresh_token = generate_refresh_token(identity=user.id)
+    
+    response = jsonify({
+        "message": "Login successful",
+        "user_id": user.id,
+    })
+    set_access_cookies(response, access_token)
+    set_refresh_cookies(response, refresh_token)
+    return response, 200
 
 
 @auth_bp.route("/refresh_access_token", methods=["POST"])
