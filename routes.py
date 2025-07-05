@@ -115,6 +115,7 @@ def refresh_access_token():
     access_token = create_access_token(identity=identity)
     response = jsonify({"msg": "Token refreshed"})
     set_access_cookies(response, access_token)
+    print(request.cookies)
     return response
 
 

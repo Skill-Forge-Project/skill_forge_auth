@@ -17,3 +17,6 @@ class Config:
     JWT_COOKIE_SAMESITE = "Strict"
     JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=60)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)
+    JWT_REFRESH_COOKIE_PATH = "/refresh_access_token"
+    JWT_COOKIE_CSRF_PROTECT = False
+
