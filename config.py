@@ -13,9 +13,9 @@ class Config:
     # JWT settings
     JWT_TOKEN_LOCATION = ["cookies"]
     JWT_COOKIE_SECURE = False          # True in production (use HTTPS)
-    JWT_COOKIE_HTTPONLY = False         # True in production (to prevent JavaScript access)
+    JWT_COOKIE_HTTPONLY = True         # True in production (to prevent JavaScript access)
     JWT_COOKIE_SAMESITE = "Strict"
-    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=60)
+    JWT_ACCESS_TOKEN_EXPIRES = timedelta(minutes=2)
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=7)
     JWT_REFRESH_COOKIE_PATH = "/refresh_access_token"
     JWT_COOKIE_CSRF_PROTECT = False

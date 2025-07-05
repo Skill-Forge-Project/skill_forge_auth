@@ -32,13 +32,16 @@ def create_app():
         
     @app.before_request
     def refresh_expired_access_token():
-        """ Refreshes the access token if it has expired.
+        """ Refresh the access token via cookie if it's about to expire.
 
         Returns:
             _type_: _description_
         """
         
         try:
+            if "access_token_cookie" not in request.cookies:
+                return # Skip refresh if no access token cookie is present(unauthenticated requests)
+            
             verify_jwt_in_request()
             jwt_data = get_jwt()
             exp_timestamp = jwt_data["exp"]

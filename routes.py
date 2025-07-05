@@ -4,7 +4,7 @@ from extensions import db
 from models import User
 from services import generate_token, generate_refresh_token, internal_only
 from flask_jwt_extended import (
-    jwt_required, 
+    jwt_required,
     get_jwt_identity, 
     set_access_cookies, 
     set_refresh_cookies, 
@@ -104,7 +104,7 @@ def logout():
     return response, 200
 
 @auth_bp.route("/refresh_access_token", methods=["POST"])
-@jwt_required(refresh=True)
+@jwt_required()
 def refresh_access_token():
     """ Refreshes **manually** the access token for the authenticated user.
 
