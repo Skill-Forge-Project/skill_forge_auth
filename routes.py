@@ -3,7 +3,13 @@ from flask import Blueprint, request, jsonify
 from extensions import db
 from models import User
 from services import generate_token, generate_refresh_token, internal_only
-from flask_jwt_extended import jwt_required, get_jwt_identity, set_access_cookies, set_refresh_cookies
+from flask_jwt_extended import (
+    jwt_required, 
+    get_jwt_identity, 
+    set_access_cookies, 
+    set_refresh_cookies, 
+    create_access_token
+)
 from datetime import timedelta
 
 
@@ -80,10 +86,16 @@ def login():
 @auth_bp.route("/refresh_access_token", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh_access_token():
-    identity = get_jwt_identity()
-    new_access_token = generate_token(identity=identity)
+    """ Refreshes **manually** the access token for the authenticated user.
 
-    return jsonify({'access_token': new_access_token})
+    Returns:
+        json: _Description of the response_
+    """
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    response = jsonify({"msg": "Token refreshed"})
+    set_access_cookies(response, access_token)
+    return response
 
 
 @auth_bp.route("/protected", methods=["GET"])
