@@ -8,7 +8,8 @@ from flask_jwt_extended import (
     get_jwt_identity, 
     set_access_cookies, 
     set_refresh_cookies, 
-    create_access_token
+    create_access_token,
+    unset_jwt_cookies
 )
 from datetime import timedelta
 
@@ -82,6 +83,25 @@ def login():
     set_refresh_cookies(response, refresh_token)
     return response, 200
 
+
+@auth_bp.route("/logout", methods=["POST"])
+@jwt_required()
+def logout():
+    """ Logs out the user by revoking the access and refresh tokens.
+
+    Returns:
+        json: _Description of the response_
+    """
+    user_id = get_jwt_identity()
+    user = User.query.get(user_id)
+    if user:
+        user.user_online_status = "Offline"
+        user.last_seen_date = db.func.current_timestamp()
+        db.session.commit()
+        
+    response = jsonify({"msg": "Logout successful"})
+    unset_jwt_cookies(response)
+    return response, 200
 
 @auth_bp.route("/refresh_access_token", methods=["POST"])
 @jwt_required(refresh=True)
