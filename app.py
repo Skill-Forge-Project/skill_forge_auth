@@ -4,6 +4,7 @@ from flask_cors import CORS
 from config import Config
 from extensions import db, jwt, migrate
 from jwt import ExpiredSignatureError, InvalidTokenError
+from flask_jwt_extended.exceptions import NoAuthorizationError
 from flask_jwt_extended import (
     verify_jwt_in_request,
     get_jwt,
@@ -18,7 +19,7 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    CORS(app)
+    CORS(app, supports_credentials=True, origins=["http://localhost:5173"])
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
@@ -38,7 +39,7 @@ def create_app():
         """
         
         try:
-            verify_jwt_in_request(optional=True)
+            verify_jwt_in_request()
             jwt_data = get_jwt()
             exp_timestamp = jwt_data["exp"]
             now = datetime.datetime.now(datetime.timezone.utc)
@@ -50,20 +51,26 @@ def create_app():
                 response = current_app.make_response()
                 set_access_cookies(response, new_access_token)
                 return response
+            
+        except NoAuthorizationError:
+            # No access_token_cookie = not logged in = skip refresh silently
+            pass
         except (ExpiredSignatureError, InvalidTokenError) as token_error:
             current_app.logger.warning(
-                f"JWT refresh failed for user [{get_jwt_identity()}] at {request.path}: {token_error}"
+                f"JWT refresh failed at {request.path}: {token_error}"
             )
-            response = jsonify({"msg": "Token invalid or expired"})
-            response.status_code = 401
-            return response
+            return jsonify({"msg": "Token invalid or expired"}), 401
+
+        except RuntimeError as jwt_err:
+            # This happens if no valid JWT is found—ignore and move on
+            current_app.logger.debug(f"No valid token found for {request.path}: {jwt_err}")
+            pass
+
         except Exception as e:
             current_app.logger.error(
                 f"Unexpected error during token refresh: {e}\n{traceback.format_exc()}"
             )
-            response = jsonify({"msg": "Internal server error"})
-            response.status_code = 500
-            return response
+            return jsonify({"msg": "Internal server error"}), 500
 
     return app
 
