@@ -29,6 +29,20 @@ def get_usernames():
     return jsonify({user.id: user.username for user in users}), 200
 
 
+@auth_bp.route("/me", methods=["GET"])
+@jwt_required()
+def get_current_user():
+    """ Retrieves the current authenticated user's ID.
+
+    Returns:
+        json: A JSON object containing the user ID.
+    """
+    user_id = get_jwt_identity()
+    print("Request cookies:", request.cookies)
+    print("User ID extracted:", user_id)
+    return jsonify({"user_id": user_id})
+
+
 @auth_bp.route("/signup", methods=["POST"])
 def signup():
     data = request.get_json()

@@ -55,7 +55,7 @@ def create_app():
             if exp_timestamp < target_timestamp:
                 identity = get_jwt_identity()
                 new_access_token = create_access_token(identity=identity)
-                response = current_app.make_response()
+                response = current_app.make_response("")
                 set_access_cookies(response, new_access_token)
                 return response
             
