@@ -38,6 +38,10 @@ def create_app():
             _type_: _description_
         """
         
+        skip_paths = {"/login", "/signup", "/refresh_access_token", "/logout"}
+        if request.path in skip_paths:
+            return # Skip refresh for these paths
+        
         try:
             if "access_token_cookie" not in request.cookies:
                 return # Skip refresh if no access token cookie is present(unauthenticated requests)
@@ -47,7 +51,7 @@ def create_app():
             exp_timestamp = jwt_data["exp"]
             now = datetime.datetime.now(datetime.timezone.utc)
             # If this token is going to expire within the next 60 seconds, refresh it now.
-            target_timestamp = datetime.datetime.timestamp(now + datetime.timedelta(seconds=10))
+            target_timestamp = datetime.datetime.timestamp(now + datetime.timedelta(minutes=29))
             if exp_timestamp < target_timestamp:
                 identity = get_jwt_identity()
                 new_access_token = create_access_token(identity=identity)

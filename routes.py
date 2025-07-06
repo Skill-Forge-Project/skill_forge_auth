@@ -79,6 +79,7 @@ def login():
         "message": "Login successful",
         "user_id": user.id,
     })
+    unset_jwt_cookies(response)  # Clear any existing JWT cookies
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
     print("Access token set in cookies:", response.headers.getlist("Set-Cookie"))
