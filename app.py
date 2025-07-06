@@ -47,7 +47,7 @@ def create_app():
             exp_timestamp = jwt_data["exp"]
             now = datetime.datetime.now(datetime.timezone.utc)
             # If this token is going to expire within the next 60 seconds, refresh it now.
-            target_timestamp = datetime.datetime.timestamp(now + datetime.timedelta(minutes=1))
+            target_timestamp = datetime.datetime.timestamp(now + datetime.timedelta(seconds=10))
             if exp_timestamp < target_timestamp:
                 identity = get_jwt_identity()
                 new_access_token = create_access_token(identity=identity)

@@ -81,6 +81,7 @@ def login():
     })
     set_access_cookies(response, access_token)
     set_refresh_cookies(response, refresh_token)
+    print("Access token set in cookies:", response.headers.getlist("Set-Cookie"))
     return response, 200
 
 
@@ -115,7 +116,7 @@ def refresh_access_token():
     access_token = create_access_token(identity=identity)
     response = jsonify({"msg": "Token refreshed"})
     set_access_cookies(response, access_token)
-    print(request.cookies)
+    print("New access token set in cookies:", response.headers.getlist("Set-Cookie"))
     return response
 
 
