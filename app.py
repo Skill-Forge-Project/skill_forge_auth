@@ -38,7 +38,7 @@ def create_app():
             _type_: _description_
         """
         
-        skip_paths = {"/login", "/signup", "/refresh_access_token", "/logout"}
+        skip_paths = {"/refresh_access_token", "/logout"}
         if request.path in skip_paths:
             return # Skip refresh for these paths
         
