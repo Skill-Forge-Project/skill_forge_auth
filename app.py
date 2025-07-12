@@ -1,5 +1,5 @@
 import datetime, traceback
-from flask import Flask, current_app, jsonify, request
+from flask import Flask, current_app, jsonify, g, request
 from flask_cors import CORS
 from config import Config
 from extensions import db, jwt, migrate
@@ -30,54 +30,45 @@ def create_app():
     with app.app_context():
         db.create_all()
         
+    
+    
     @app.before_request
-    def refresh_expired_access_token():
-        """ Refresh the access token via cookie if it's about to expire.
+    def check_access_token():
+        """Check if the access token is valid and not expired.
 
-        Returns:
-            _type_: _description_
         """
-        
-        skip_paths = {"/refresh_access_token", "/logout"}
-        if request.path in skip_paths:
-            return # Skip refresh for these paths
-        
+        skip_paths = {"/login", "/me", "/refresh_access_token", "/logout"}
+
         try:
-            if "access_token_cookie" not in request.cookies:
-                return # Skip refresh if no access token cookie is present(unauthenticated requests)
-            
             verify_jwt_in_request()
             jwt_data = get_jwt()
             exp_timestamp = jwt_data["exp"]
             now = datetime.datetime.now(datetime.timezone.utc)
-            # If this token is going to expire within the next 60 seconds, refresh it now.
             target_timestamp = datetime.datetime.timestamp(now + datetime.timedelta(minutes=29))
+
             if exp_timestamp < target_timestamp:
+                g.needs_refresh = True
+                g.identity = get_jwt_identity()
+        except ExpiredSignatureError:
+            g.needs_refresh = True
+            g.identity = None  # will be set during refresh
+        except Exception:
+            g.needs_refresh = False
+    
+    @app.after_request
+    def maybe_refresh_token(response):
+        if getattr(g, "needs_refresh", False):
+            try:
+                # Use refresh token to get new access token
+                verify_jwt_in_request(refresh=True)
                 identity = get_jwt_identity()
                 new_access_token = create_access_token(identity=identity)
-                response = current_app.make_response("")
                 set_access_cookies(response, new_access_token)
-                return response
-            
-        except NoAuthorizationError:
-            # No access_token_cookie = not logged in = skip refresh silently
-            pass
-        except (ExpiredSignatureError, InvalidTokenError) as token_error:
-            current_app.logger.warning(
-                f"JWT refresh failed at {request.path}: {token_error}"
-            )
-            return jsonify({"msg": "Token invalid or expired"}), 401
-
-        except RuntimeError as jwt_err:
-            # This happens if no valid JWT is found—ignore and move on
-            current_app.logger.debug(f"No valid token found for {request.path}: {jwt_err}")
-            pass
-
-        except Exception as e:
-            current_app.logger.error(
-                f"Unexpected error during token refresh: {e}\n{traceback.format_exc()}"
-            )
-            return jsonify({"msg": "Internal server error"}), 500
+                print(f"🔁 Refreshed access token for user: {identity}")
+            except Exception as e:
+                current_app.logger.warning(f"Failed to refresh token: {e}")
+                # Optionally clear cookies or return 401
+        return response
 
     return app
 

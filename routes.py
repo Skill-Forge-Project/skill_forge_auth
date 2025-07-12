@@ -18,6 +18,7 @@ from datetime import timedelta
 auth_bp = Blueprint("auth", __name__)
 
 
+
 @auth_bp.route("/internal/users/usernames", methods=["GET"])
 @internal_only
 def get_usernames():
@@ -40,7 +41,7 @@ def get_current_user():
     user_id = get_jwt_identity()
     print("Request cookies:", request.cookies)
     print("User ID extracted:", user_id)
-    return jsonify({"user_id": user_id})
+    return jsonify({"userId": user_id}), 200
 
 
 @auth_bp.route("/signup", methods=["POST"])
@@ -118,6 +119,7 @@ def logout():
     response = jsonify({"msg": "Logout successful"})
     unset_jwt_cookies(response)
     return response, 200
+
 
 @auth_bp.route("/refresh_access_token", methods=["POST"])
 @jwt_required()
